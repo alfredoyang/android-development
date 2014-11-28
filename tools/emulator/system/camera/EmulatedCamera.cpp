@@ -344,7 +344,16 @@ status_t EmulatedCamera::takePicture()
     if (jpeg_quality <= 0) {
         jpeg_quality = 90;  /* Fall back to default. */
     }
-
+    
+    /*
+     * It causes a deadlock to stop WotherThread when video recording is on.
+     */
+    const bool recording_on = mCallbackNotifier.isVideoRecordingEnabled();
+    if (recording_on) {
+        mCallbackNotifier.setJpegQuality(jpeg_quality);
+        mCallbackNotifier.setTakingPicture(true);
+        return OK;
+    }
     /*
      * Make sure preview is not running, and device is stopped before taking
      * picture.
